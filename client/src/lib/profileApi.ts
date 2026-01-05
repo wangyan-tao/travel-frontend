@@ -70,6 +70,10 @@ export interface ProfileData {
 export const profileApi = {
   getMe: async (): Promise<ProfileData> => {
     const res: any = await axios.get('/profile/me');
-    return res.data;
+    // axios 拦截器已经返回了 response.data，所以 res 就是 Result 对象
+    if (res.code === 200 && res.data) {
+      return res.data;
+    }
+    throw new Error(res.message || '获取个人信息失败');
   },
 };
