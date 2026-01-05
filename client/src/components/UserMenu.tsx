@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Settings, FileText } from 'lucide-react';
+import { LogOut, User, Settings, FileText, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -103,6 +103,10 @@ export default function UserMenu() {
     setLocation('/my-applications');
   };
 
+  const handleRepaymentCapacity = () => {
+    setLocation('/repayment-capacity');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2">
@@ -162,6 +166,10 @@ export default function UserMenu() {
         <DropdownMenuItem onClick={handleMyApplications}>
           <FileText className="mr-2 h-4 w-4" />
           <span>我的申请</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleRepaymentCapacity}>
+          <TrendingUp className="mr-2 h-4 w-4" />
+          <span>还款能力辅助</span>
         </DropdownMenuItem>
         {user.role === 'ADMIN' && (
           <DropdownMenuItem onClick={() => setLocation('/admin/dashboard')}>
