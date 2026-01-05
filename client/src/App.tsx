@@ -16,6 +16,7 @@ import LoanApplication from "./pages/LoanApplication";
 import RepaymentManagement from "./pages/RepaymentManagement";
 import AdminDashboard from "./pages/admin/Dashboard";
 import MyApplications from "./pages/MyApplications";
+import Profile from "./pages/Profile";
 import RepaymentCapacityAssistance from "./pages/RepaymentCapacityAssistance";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/loan-products" component={LoanProducts} />
         <Route path="/loan-application/:id" component={LoanApplication} />
         <Route path="/repayment" component={RepaymentManagement} />
+        <Route path="/profile" component={Profile} />
         <Route path="/my-applications" component={MyApplications} />
         <Route path="/repayment-capacity" component={RepaymentCapacityAssistance} />
         <Route path="/admin/dashboard" component={AdminDashboard} />

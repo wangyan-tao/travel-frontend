@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import axios from '@/lib/axios';
+import IDCardOCR from '@/components/IDCardOCR';
 
 export default function GuarantorInfo() {
   const [, setLocation] = useLocation();
@@ -13,17 +15,34 @@ export default function GuarantorInfo() {
   const [agreed, setAgreed] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    idCardNo: '',
+    idCard: '',
     relationship: '',
     phone: '',
     workUnit: '',
-    position: ''
+    idCardFrontUrl: '',
+    idCardBackUrl: ''
   });
+
+  const handleIDCardDataExtracted = (data: any, side: 'front' | 'back') => {
+    if (side === 'front') {
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        idCard: data.idNumber || prev.idCard,
+        idCardFrontUrl: data.imageUrl || prev.idCardFrontUrl
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        idCardBackUrl: data.imageUrl || prev.idCardBackUrl
+      }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.idCardNo || !formData.phone) {
+    if (!formData.name || !formData.idCard || !formData.phone || !formData.relationship) {
       toast.error('请填写完整信息');
       return;
     }
@@ -33,12 +52,31 @@ export default function GuarantorInfo() {
       return;
     }
 
+    if (!formData.idCardFrontUrl || !formData.idCardBackUrl) {
+      toast.error('请上传身份证正反面照片');
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // TODO: 调用后端API
-      toast.success('担保人信息提交成功');
-      setLocation('/loan-products');
+      const payload = {
+        name: formData.name,
+        idCard: formData.idCard,
+        relationship: formData.relationship,
+        phone: formData.phone,
+        workUnit: formData.workUnit,
+        idCardFrontUrl: formData.idCardFrontUrl,
+        idCardBackUrl: formData.idCardBackUrl,
+        agreementSigned: true
+      };
+      const response: any = await axios.post('/guarantor/submit', payload);
+      if (response.code === 200) {
+        toast.success('担保人信息提交成功');
+        setLocation('/profile');
+      } else {
+        toast.error(response.message || '提交失败，请稍后重试');
+      }
     } catch (error) {
       toast.error('提交失败，请稍后重试');
     } finally {
@@ -52,7 +90,7 @@ export default function GuarantorInfo() {
         <Card className="p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-bold mb-2">担保人信息</h1>
-            <p className="text-muted-foreground">请填写担保人基本信息</p>
+            <p className="text-muted-foreground">请填写担保人基本信息并上传身份证照片</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,11 +106,11 @@ export default function GuarantorInfo() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="idCardNo">身份证号 *</Label>
+                <Label htmlFor="idCard">身份证号 *</Label>
                 <Input
-                  id="idCardNo"
-                  value={formData.idCardNo}
-                  onChange={(e) => setFormData({ ...formData, idCardNo: e.target.value })}
+                  id="idCard"
+                  value={formData.idCard}
+                  onChange={(e) => setFormData({ ...formData, idCard: e.target.value })}
                   placeholder="请输入身份证号"
                 />
               </div>
@@ -106,14 +144,18 @@ export default function GuarantorInfo() {
                   placeholder="请输入工作单位"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="position">职务</Label>
-                <Input
-                  id="position"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="请输入职务"
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">身份证照片</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <IDCardOCR
+                  side="front"
+                  onDataExtracted={(data) => handleIDCardDataExtracted(data, 'front')}
+                />
+                <IDCardOCR
+                  side="back"
+                  onDataExtracted={(data) => handleIDCardDataExtracted(data, 'back')}
                 />
               </div>
             </div>
