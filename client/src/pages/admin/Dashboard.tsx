@@ -176,6 +176,19 @@ export default function AdminDashboard() {
                 <div className="text-sm text-muted-foreground">上架、修改和下架贷款产品</div>
               </div>
             </Button>
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/certificates')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                <FileText className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">审批管理</div>
+                <div className="text-sm text-muted-foreground">审批用户上传的工作证明和学业荣誉</div>
+              </div>
+            </Button>
           </div>
         </Card>
 

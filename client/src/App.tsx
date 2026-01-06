@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import UserList from "./pages/admin/UserList";
 import ApplicationList from "./pages/admin/ApplicationList";
+import CertificateList from "./pages/admin/CertificateList";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import IdentityVerification from "./pages/IdentityVerification";
@@ -44,6 +45,7 @@ function Router() {
         <Route path="/admin/applications" component={ApplicationList} />
         <Route path="/admin/loans" component={ApplicationList} />
         <Route path="/admin/loan-products" component={LoanProductManagement} />
+        <Route path="/admin/certificates" component={CertificateList} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

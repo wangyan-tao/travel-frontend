@@ -183,5 +183,75 @@ export const adminApi = {
       }
     },
   },
+
+  /**
+   * 证书审批管理
+   */
+  certificates: {
+    /**
+     * 获取证书列表（分页）
+     */
+    getCertificates: async (keyword?: string, status?: string, page: number = 1, size: number = 10): Promise<PageResult<CertificateDTO>> => {
+      const params = new URLSearchParams();
+      if (keyword) params.append('keyword', keyword);
+      if (status) params.append('status', status);
+      params.append('page', page.toString());
+      params.append('size', size.toString());
+      const response: any = await axios.get(`/admin/certificates?${params.toString()}`);
+      if (response.code === 200) {
+        return response.data;
+      }
+      throw new Error(response.message || '获取证书列表失败');
+    },
+
+    /**
+     * 获取证书详情
+     */
+    getCertificateById: async (id: number): Promise<CertificateDTO> => {
+      const response: any = await axios.get(`/admin/certificates/${id}`);
+      if (response.code === 200) {
+        return response.data;
+      }
+      throw new Error(response.message || '获取证书详情失败');
+    },
+
+    /**
+     * 审批通过
+     */
+    approveCertificate: async (id: number, data: { approvalOpinion?: string }): Promise<void> => {
+      const response: any = await axios.post(`/admin/certificates/${id}/approve`, data);
+      if (response.code !== 200) {
+        throw new Error(response.message || '审批失败');
+      }
+    },
+
+    /**
+     * 审批拒绝
+     */
+    rejectCertificate: async (id: number, data: { approvalOpinion?: string }): Promise<void> => {
+      const response: any = await axios.post(`/admin/certificates/${id}/reject`, data);
+      if (response.code !== 200) {
+        throw new Error(response.message || '拒绝失败');
+      }
+    },
+  },
 };
+
+export interface CertificateDTO {
+  id: number;
+  userId: number;
+  username?: string;
+  certificateType: string;
+  certificateTypeName: string;
+  certificateName: string;
+  certificateUrl: string;
+  description: string;
+  status: string;
+  statusName: string;
+  approverId?: number;
+  approvalOpinion?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 

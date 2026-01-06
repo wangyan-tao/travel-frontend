@@ -157,10 +157,12 @@ export default function UserMenu() {
           <FileText className="mr-2 h-4 w-4" />
           <span>我的申请</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleRepaymentCapacity}>
-          <TrendingUp className="mr-2 h-4 w-4" />
-          <span>还款能力辅助</span>
-        </DropdownMenuItem>
+        {user.role !== 'ADMIN' && (
+          <DropdownMenuItem onClick={handleRepaymentCapacity}>
+            <TrendingUp className="mr-2 h-4 w-4" />
+            <span>还款能力辅助</span>
+          </DropdownMenuItem>
+        )}
         {user.role === 'ADMIN' && (
           <DropdownMenuItem onClick={() => setLocation('/admin/dashboard')}>
             <Settings className="mr-2 h-4 w-4" />
