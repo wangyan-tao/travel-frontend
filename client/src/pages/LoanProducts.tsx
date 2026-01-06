@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import axios from '@/lib/axios';
+import { profileApi } from '@/lib/profileApi';
 
 interface LoanProduct {
   id: number;
@@ -21,11 +32,15 @@ interface LoanProduct {
 }
 
 export default function LoanProducts() {
+  const [, setLocation] = useLocation();
   const [productType, setProductType] = useState('all');
   const [products, setProducts] = useState<LoanProduct[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 6;
   const [hasMore, setHasMore] = useState(false);
+  const [showEvaluationDialog, setShowEvaluationDialog] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [evaluationCompleted, setEvaluationCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -55,6 +70,33 @@ export default function LoanProducts() {
   useEffect(() => {
     setPage(1);
   }, [productType]);
+
+  useEffect(() => {
+    const checkEvaluation = async () => {
+      try {
+        const completed = await profileApi.checkEvaluation();
+        setEvaluationCompleted(completed);
+      } catch (error) {
+        console.error('检查测评状态失败:', error);
+      }
+    };
+    checkEvaluation();
+  }, []);
+
+  const handleApplyClick = (e: React.MouseEvent, productId: number) => {
+    e.preventDefault();
+    if (evaluationCompleted === false) {
+      setSelectedProductId(productId);
+      setShowEvaluationDialog(true);
+    } else {
+      setLocation(`/loan-application/${productId}`);
+    }
+  };
+
+  const handleGoToEvaluation = () => {
+    setShowEvaluationDialog(false);
+    setLocation('/evaluation');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -142,9 +184,12 @@ export default function LoanProducts() {
                   </div>
                 </div>
 
-                <Link href={`/loan-application/${product.id}`}>
-                  <Button className="w-full">立即申请</Button>
-                </Link>
+                <Button
+                  className="w-full"
+                  onClick={(e) => handleApplyClick(e, product.id)}
+                >
+                  立即申请
+                </Button>
               </div>
             </Card>
           ))}
@@ -188,6 +233,23 @@ export default function LoanProducts() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showEvaluationDialog} onOpenChange={setShowEvaluationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>需要完成测评</AlertDialogTitle>
+            <AlertDialogDescription>
+              在申请贷款产品前，您需要先完成风险测评问卷。这将帮助我们为您推荐最合适的贷款产品。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleGoToEvaluation}>
+              前往测评
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

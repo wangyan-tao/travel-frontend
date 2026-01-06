@@ -25,6 +25,10 @@ export interface UserIdentity {
   studentCardUrl?: string;
   verificationStatus?: string;
   verifiedAt?: string;
+  evaluationCompleted?: boolean;
+  evaluationScore?: number;
+  evaluationLevel?: string;
+  evaluationCompletedAt?: string;
 }
 
 export interface Guarantor {
@@ -67,9 +71,50 @@ export interface ProfileData {
   guarantorCompleted: boolean;
 }
 
+export interface EvaluationQuestionnaire {
+  id: number;
+  userId: number;
+  monthlyIncome?: string;
+  repaymentCapability?: string;
+  creditRecord?: string;
+  travelBudget?: string;
+  repaymentPreference?: string;
+  riskTolerance?: string;
+  totalScore: number;
+  evaluationLevel: string;
+  answers?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EvaluationRequest {
+  monthlyIncome: string;
+  repaymentCapability: string;
+  creditRecord: string;
+  travelBudget: string;
+  repaymentPreference: string;
+  riskTolerance: string;
+  answers?: Record<string, any>;
+}
+
 export const profileApi = {
   getMe: async (): Promise<ProfileData> => {
     const res: any = await axios.get('/profile/me');
+    return res.data;
+  },
+  
+  checkEvaluation: async (): Promise<boolean> => {
+    const res: any = await axios.get('/evaluation/check');
+    return res.data || false;
+  },
+  
+  getEvaluation: async (): Promise<EvaluationQuestionnaire | null> => {
+    const res: any = await axios.get('/evaluation/result');
+    return res.data || null;
+  },
+  
+  submitEvaluation: async (data: EvaluationRequest): Promise<EvaluationQuestionnaire> => {
+    const res: any = await axios.post('/evaluation/submit', data);
     return res.data;
   },
 };
