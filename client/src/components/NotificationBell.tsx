@@ -9,7 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { toast } from 'sonner';
 
 interface Notification {
@@ -29,8 +29,8 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-    // 每30秒自动刷新通知
-    const interval = setInterval(fetchNotifications, 30000);
+    // 每1分钟自动刷新通知
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -39,14 +39,10 @@ export default function NotificationBell() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axios.get('http://localhost:8080/api/notifications', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response: any = await axios.get('/notifications');
 
-      if (response.data.code === 200) {
-        const data = response.data.data || [];
+      if (response.code === 200) {
+        const data = response.data || [];
         setNotifications(data);
         setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
       }
@@ -61,15 +57,7 @@ export default function NotificationBell() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await axios.put(
-        `http://localhost:8080/api/notifications/${id}/read`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.put(`/notifications/${id}/read`, {});
 
       // 更新本地状态
       setNotifications((prev) =>
@@ -87,15 +75,7 @@ export default function NotificationBell() {
       if (!token) return;
 
       setLoading(true);
-      await axios.put(
-        'http://localhost:8080/api/notifications/read-all',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.put('/notifications/read-all', {});
 
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);

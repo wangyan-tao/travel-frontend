@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, FileText, TrendingUp, AlertCircle, Loader2, Filter, RotateCcw, ArrowRight } from 'lucide-react';
+import { Users, FileText, TrendingUp, AlertCircle, Loader2, Filter, RotateCcw, ArrowRight, Package } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { statisticsApi, type FullStatistics, type StatisticsFilter } from '@/lib/statisticsApi';
 import { MOCK_STATISTICS } from '@/lib/mockStatistics';
@@ -130,14 +130,63 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8">
+        {/* 快速导航 - 放在最顶部 */}
+        <Card className="p-6 mb-8 shadow-lg border-2">
+          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+            <div className="h-1 w-8 bg-gradient-to-r from-primary to-primary/60 rounded-full" />
+            快速导航
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/users')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">用户管理</div>
+                <div className="text-sm text-muted-foreground">查看和管理用户信息</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/applications')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                <FileText className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">申请管理</div>
+                <div className="text-sm text-muted-foreground">审批和管理贷款申请</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/loan-products')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                <Package className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">产品管理</div>
+                <div className="text-sm text-muted-foreground">上架、修改和下架贷款产品</div>
+              </div>
+            </Button>
+          </div>
+        </Card>
+
         {/* 页面标题 */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">数据分析</h1>
           <p className="text-muted-foreground">实时监控平台运营数据</p>
         </div>
 
         {/* 筛选器 */}
-        <Card className="p-6 mb-8 shadow-lg">
+        <Card className="p-6 mb-6 shadow-lg">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 mb-2">
               <Filter className="h-5 w-5 text-primary" />

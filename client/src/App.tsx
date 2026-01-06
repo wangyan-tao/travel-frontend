@@ -15,6 +15,7 @@ import LoanProducts from "./pages/LoanProducts";
 import LoanApplication from "./pages/LoanApplication";
 import RepaymentManagement from "./pages/RepaymentManagement";
 import AdminDashboard from "./pages/admin/Dashboard";
+import LoanProductManagement from "./pages/admin/LoanProductManagement";
 import MyApplications from "./pages/MyApplications";
 import Profile from "./pages/Profile";
 import Evaluation from "./pages/Evaluation";
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/admin/users" component={UserList} />
         <Route path="/admin/applications" component={ApplicationList} />
         <Route path="/admin/loans" component={ApplicationList} />
+        <Route path="/admin/loan-products" component={LoanProductManagement} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
