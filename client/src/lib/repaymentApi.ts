@@ -42,6 +42,37 @@ export interface RepaymentRecord {
   updatedAt: string;
 }
 
+export interface ProductRepaymentDetail {
+  productId: number;
+  productName: string;
+  productType: string;
+  totalLoanAmount: number;
+  totalPeriods: number;
+  paidPeriods: number;
+  remainingPeriods: number;
+  totalPrincipal: number;
+  totalInterest: number;
+  paidPrincipal: number;
+  paidInterest: number;
+  paidAmount: number;
+  remainingAmount: number;
+  startDate: string;
+  endDate: string;
+  plans: RepaymentPlan[];
+}
+
+export interface PrepayCalculation {
+  prepayAmount: number;
+  remainingPrincipal: number;
+  remainingInterest: number;
+  remainingAmount: number;
+  remainingPeriods: number;
+  savedInterest: number;
+  newRemainingAmount: number;
+  newRemainingPeriods: number;
+  reducedPeriods: number;
+}
+
 export const repaymentApi = {
   /**
    * 获取还款概览
@@ -85,6 +116,44 @@ export const repaymentApi = {
       return response.data;
     }
     throw new Error(response.message || '获取还款记录失败');
+  },
+
+  /**
+   * 按时间维度查询还款记录
+   * @param timeRange 时间范围：3M-近3个月, 6M-近6个月, ALL-全部
+   */
+  getRecordsByTimeRange: async (timeRange: '3M' | '6M' | 'ALL' = 'ALL'): Promise<RepaymentRecord[]> => {
+    const response: any = await axios.get('/repayment/records/time-range', {
+      params: { timeRange },
+    });
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '获取还款记录失败');
+  },
+
+  /**
+   * 按产品分组的还款详情
+   */
+  getProductRepaymentDetails: async (): Promise<ProductRepaymentDetail[]> => {
+    const response: any = await axios.get('/repayment/product-details');
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '获取产品还款详情失败');
+  },
+
+  /**
+   * 提前还款测算
+   */
+  calculatePrepayment: async (applicationId: number, prepayAmount: number): Promise<PrepayCalculation> => {
+    const response: any = await axios.post('/repayment/prepay/calculate', null, {
+      params: { applicationId, prepayAmount },
+    });
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '提前还款测算失败');
   },
 };
 
