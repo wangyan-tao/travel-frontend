@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Settings, FileText, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axios from '@/lib/axios';
 
 interface UserInfo {
   id: number;
@@ -47,19 +47,16 @@ export default function UserMenu() {
         return;
       }
 
-      const response = await axios.get('http://localhost:8080/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response: any = await axios.get('/auth/me');
 
-      if (response.data.code === 200) {
-        setUser(response.data.data);
+      if (response.code === 200) {
+        setUser(response.data);
       } else {
         setUser(null);
       }
     } catch (error) {
       console.error('获取用户信息失败:', error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -69,15 +66,12 @@ export default function UserMenu() {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        await axios.post(
-          'http://localhost:8080/api/auth/logout',
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        try {
+          await axios.post('/auth/logout', {});
+        } catch (error) {
+          // 忽略退出登录接口的错误，继续清除本地数据
+          console.error('退出登录接口调用失败:', error);
+        }
       }
 
       localStorage.removeItem('token');
