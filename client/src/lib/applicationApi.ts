@@ -55,5 +55,21 @@ export const applicationApi = {
       throw new Error(response.message || '取消申请失败');
     }
   },
+
+  /**
+   * 创建贷款申请
+   */
+  createApplication: async (data: {
+    productId: number;
+    applyAmount: number;
+    applyTerm: number;
+    purpose: string;
+  }): Promise<LoanApplicationDTO> => {
+    const response: any = await axios.post('/loan/applications', data);
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '提交申请失败');
+  },
 };
 

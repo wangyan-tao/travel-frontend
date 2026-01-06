@@ -68,22 +68,18 @@ export default function UserMenu() {
       if (token) {
         try {
           await axios.post('/auth/logout', {});
-        } catch (error) {
+        } catch (error: any) {
           // 忽略退出登录接口的错误，继续清除本地数据
           console.error('退出登录接口调用失败:', error);
         }
       }
-
+    } catch (error) {
+      console.error('退出登录失败:', error);
+    } finally {
+      // 无论接口调用是否成功，都清除本地数据
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       toast.success('退出登录成功');
-      window.dispatchEvent(new Event('auth-changed'));
-      setLocation('/login');
-    } catch (error) {
-      console.error('退出登录失败:', error);
-      // 即使请求失败也清除本地token
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       window.dispatchEvent(new Event('auth-changed'));
       setLocation('/login');
     }
