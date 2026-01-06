@@ -27,6 +27,7 @@ export interface RepaymentPlanDTO {
   plan: RepaymentPlan;
   applicationId: number;
   loanAmount: number;
+  productName: string;
 }
 
 export interface RepaymentRecord {

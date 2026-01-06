@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import UserList from "./pages/admin/UserList";
 import ApplicationList from "./pages/admin/ApplicationList";
 import CertificateList from "./pages/admin/CertificateList";
+import DisbursementList from "./pages/admin/DisbursementList";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import IdentityVerification from "./pages/IdentityVerification";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/admin/users" component={UserList} />
         <Route path="/admin/applications" component={ApplicationList} />
+        <Route path="/admin/disbursements" component={DisbursementList} />
         <Route path="/admin/loans" component={ApplicationList} />
         <Route path="/admin/loan-products" component={LoanProductManagement} />
         <Route path="/admin/certificates" component={CertificateList} />

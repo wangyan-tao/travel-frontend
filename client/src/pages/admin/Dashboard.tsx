@@ -136,7 +136,7 @@ export default function AdminDashboard() {
             <div className="h-1 w-8 bg-gradient-to-r from-primary to-primary/60 rounded-full" />
             快速导航
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant="outline"
               className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
@@ -161,6 +161,19 @@ export default function AdminDashboard() {
               <div className="text-left flex-1">
                 <div className="font-semibold text-base mb-1">申请管理</div>
                 <div className="text-sm text-muted-foreground">审批和管理贷款申请</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/disbursements')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                <TrendingUp className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">放款管理</div>
+                <div className="text-sm text-muted-foreground">管理已批准申请的放款</div>
               </div>
             </Button>
             <Button

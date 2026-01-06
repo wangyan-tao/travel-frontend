@@ -173,38 +173,76 @@ export default function RepaymentManagement() {
               暂无还款计划
             </div>
           ) : (
-            <div className="space-y-3">
-              {plans.map((planDTO) => {
-                const plan = planDTO.plan;
-                return (
-                  <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4 flex-1">
-                      {getStatusIcon(plan.status)}
-                      <div>
-                        <div className="font-semibold mb-1">
-                          第 {plan.periodNumber} 期
-                          <span className="text-sm text-muted-foreground ml-2">
-                            (申请ID: {planDTO.applicationId})
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          应还日期: {format(new Date(plan.dueDate), 'yyyy-MM-dd', { locale: zhCN })}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          本金: ¥{Number(plan.principalAmount).toLocaleString()} | 
-                          利息: ¥{Number(plan.interestAmount).toLocaleString()}
-                        </div>
+            <div className="space-y-6">
+              {(() => {
+                // 按申请ID分组
+                const groupedPlans = plans.reduce((acc, planDTO) => {
+                  const applicationId = planDTO.applicationId;
+                  if (!acc[applicationId]) {
+                    acc[applicationId] = [];
+                  }
+                  acc[applicationId].push(planDTO);
+                  return acc;
+                }, {} as Record<number, typeof plans>);
+
+                // 按申请ID降序排序（最新的申请在前）
+                const sortedGroups = Object.entries(groupedPlans).sort((a, b) => {
+                  return Number(b[0]) - Number(a[0]);
+                });
+
+                return sortedGroups.map(([applicationId, applicationPlans]) => {
+                  // 获取该申请的产品名称（所有计划的产品名称应该相同）
+                  const productName = applicationPlans[0]?.productName || '未知产品';
+                  // 按期数排序
+                  const sortedPlans = [...applicationPlans].sort((a, b) => {
+                    return a.plan.periodNumber - b.plan.periodNumber;
+                  });
+
+                  return (
+                    <div key={applicationId} className="space-y-3">
+                      <div className="flex items-center gap-3 mb-3 pb-2 border-b">
+                        <h3 className="text-lg font-semibold text-primary">
+                          申请ID: {applicationId}
+                        </h3>
+                        <span className="text-sm text-muted-foreground">
+                          {productName}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          ({sortedPlans.length} 期)
+                        </span>
                       </div>
+                      {sortedPlans.map((planDTO) => {
+                        const plan = planDTO.plan;
+                        return (
+                          <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors ml-4">
+                            <div className="flex items-center gap-4 flex-1">
+                              {getStatusIcon(plan.status)}
+                              <div>
+                                <div className="font-semibold mb-1">
+                                  第 {plan.periodNumber} 期
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  应还日期: {format(new Date(plan.dueDate), 'yyyy-MM-dd', { locale: zhCN })}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  本金: ¥{Number(plan.principalAmount).toLocaleString()} | 
+                                  利息: ¥{Number(plan.interestAmount).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold mb-2">
+                                ¥{Number(plan.totalAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                              {getStatusBadge(plan.status)}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold mb-2">
-                        ¥{Number(plan.totalAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </div>
-                      {getStatusBadge(plan.status)}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           )}
         </Card>
@@ -217,26 +255,82 @@ export default function RepaymentManagement() {
               暂无还款记录
             </div>
           ) : (
-            <div className="space-y-3">
-              {records.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  <div>
-                    <div className="font-semibold mb-1">
-                      还款金额: ¥{Number(record.paymentAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      还款时间: {format(new Date(record.paymentTime), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
-                    </div>
-                    {record.paymentMethod && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        支付方式: {record.paymentMethod}
-                        {record.transactionId && ` | 交易流水: ${record.transactionId}`}
+            <div className="space-y-6">
+              {(() => {
+                // 创建申请ID到产品名称的映射
+                const applicationProductMap = new Map<number, string>();
+                plans.forEach(planDTO => {
+                  if (!applicationProductMap.has(planDTO.applicationId)) {
+                    applicationProductMap.set(planDTO.applicationId, planDTO.productName || '未知产品');
+                  }
+                });
+
+                // 按申请ID分组
+                const groupedRecords = records.reduce((acc, record) => {
+                  const applicationId = record.applicationId;
+                  if (!acc[applicationId]) {
+                    acc[applicationId] = [];
+                  }
+                  acc[applicationId].push(record);
+                  return acc;
+                }, {} as Record<number, typeof records>);
+
+                // 按申请ID降序排序（最新的申请在前）
+                const sortedGroups = Object.entries(groupedRecords).sort((a, b) => {
+                  return Number(b[0]) - Number(a[0]);
+                });
+
+                return sortedGroups.map(([applicationId, applicationRecords]) => {
+                  const productName = applicationProductMap.get(Number(applicationId)) || '未知产品';
+                  // 按还款时间降序排序（最新的在前）
+                  const sortedRecords = [...applicationRecords].sort((a, b) => {
+                    return new Date(b.paymentTime).getTime() - new Date(a.paymentTime).getTime();
+                  });
+
+                  // 计算该申请的总还款金额
+                  const totalAmount = sortedRecords.reduce((sum, record) => sum + record.paymentAmount, 0);
+
+                  return (
+                    <div key={applicationId} className="space-y-3">
+                      <div className="flex items-center gap-3 mb-3 pb-2 border-b">
+                        <h3 className="text-lg font-semibold text-primary">
+                          申请ID: {applicationId}
+                        </h3>
+                        <span className="text-sm text-muted-foreground">
+                          {productName}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          ({sortedRecords.length} 笔)
+                        </span>
+                        <span className="text-sm font-medium text-green-600 ml-auto">
+                          累计还款: ¥{totalAmount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  <Badge className="bg-green-500">已还款</Badge>
-                </div>
-              ))}
+                      {sortedRecords.map((record) => (
+                        <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors ml-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="font-semibold text-lg">
+                                ¥{Number(record.paymentAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                              <Badge className="bg-green-500">已还款</Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground mb-1">
+                              还款时间: {format(new Date(record.paymentTime), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                            </div>
+                            {record.paymentMethod && (
+                              <div className="text-xs text-muted-foreground">
+                                支付方式: {record.paymentMethod}
+                                {record.transactionId && ` | 交易流水: ${record.transactionId}`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </Card>
