@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GraduationCap, Upload, CheckCircle2, XCircle, Clock, Award, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axiosInstance from '@/lib/axios';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface AcademicHonor {
@@ -44,23 +44,15 @@ export default function AcademicHonorUpload() {
   const fetchHonors = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
+      const response: any = await axiosInstance.get('/academic-honors');
 
-      const response = await axios.get('http://localhost:8080/api/academic-honors', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data.code === 200) {
-        setHonors(response.data.data || []);
+      if (response.code === 200) {
+        setHonors(response.data || []);
       }
     } catch (error: any) {
       console.error('获取学业荣誉失败:', error);
-      if (error.response?.status !== 404) {
-        toast.error('获取学业荣誉失败');
+      if (error.message && !error.message.includes('404')) {
+        toast.error(error.message || '获取学业荣誉失败');
       }
     } finally {
       setLoading(false);
@@ -79,28 +71,21 @@ export default function AcademicHonorUpload() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
       // 先上传文件
       const formData = new FormData();
       formData.append('file', uploadForm.file);
 
-      const uploadResponse = await axios.post('http://localhost:8080/api/upload', formData, {
+      const uploadResponse: any = await axiosInstance.post('/upload', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (uploadResponse.data.code !== 200) {
-        throw new Error('文件上传失败');
+      if (uploadResponse.code !== 200) {
+        throw new Error(uploadResponse.message || '文件上传失败');
       }
 
-      const fileUrl = uploadResponse.data.data.url;
+      const fileUrl = uploadResponse.data.url;
       console.log('文件上传成功，URL:', fileUrl);
 
       // 提交学业荣誉
@@ -115,16 +100,11 @@ export default function AcademicHonorUpload() {
 
       console.log('提交学业荣誉数据:', honorData);
 
-      const response = await axios.post('http://localhost:8080/api/academic-honors', honorData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
+      const response: any = await axiosInstance.post('/academic-honors', honorData);
 
-      console.log('学业荣誉提交响应:', response.data);
+      console.log('学业荣誉提交响应:', response);
 
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         toast.success('学业荣誉上传成功！');
         setUploadDialogOpen(false);
         setUploadForm({
@@ -142,7 +122,7 @@ export default function AcademicHonorUpload() {
       }
     } catch (error: any) {
       console.error('上传学业荣誉失败:', error);
-      toast.error(error.response?.data?.message || '上传学业荣誉失败');
+      toast.error(error.message || '上传学业荣誉失败');
     }
   };
 

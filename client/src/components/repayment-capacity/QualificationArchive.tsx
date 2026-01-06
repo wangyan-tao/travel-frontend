@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FolderOpen, Briefcase, GraduationCap, CheckCircle2, XCircle, Clock, FileText, Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axiosInstance from '@/lib/axios';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface JobProof {
@@ -58,46 +58,36 @@ export default function QualificationArchive() {
   const fetchArchive = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
       console.log('开始获取资质档案...');
 
       // 并行获取工作证明和学业荣誉
       const [jobProofsResponse, honorsResponse] = await Promise.all([
-        axios.get('http://localhost:8080/api/jobs/proof', {
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch((err) => {
+        axiosInstance.get('/jobs/proof').catch((err) => {
           console.error('获取工作证明失败:', err);
-          return { data: { code: 200, data: [] } };
+          return { code: 200, data: [] };
         }),
-        axios.get('http://localhost:8080/api/academic-honors', {
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch((err) => {
+        axiosInstance.get('/academic-honors').catch((err) => {
           console.error('获取学业荣誉失败:', err);
-          return { data: { code: 200, data: [] } };
+          return { code: 200, data: [] };
         }),
       ]);
 
-      console.log('工作证明响应:', jobProofsResponse.data);
-      console.log('学业荣誉响应:', honorsResponse.data);
+      console.log('工作证明响应:', jobProofsResponse);
+      console.log('学业荣誉响应:', honorsResponse);
 
-      if (jobProofsResponse.data.code === 200) {
-        const proofs = jobProofsResponse.data.data || [];
+      if (jobProofsResponse.code === 200) {
+        const proofs = jobProofsResponse.data || [];
         console.log('工作证明数量:', proofs.length);
         setJobProofs(proofs);
       }
-      if (honorsResponse.data.code === 200) {
-        const honors = honorsResponse.data.data || [];
+      if (honorsResponse.code === 200) {
+        const honors = honorsResponse.data || [];
         console.log('学业荣誉数量:', honors.length);
         setAcademicHonors(honors);
       }
     } catch (error: any) {
       console.error('获取资质档案失败:', error);
-      toast.error('获取资质档案失败');
+      toast.error(error.message || '获取资质档案失败');
     } finally {
       setLoading(false);
     }
@@ -105,45 +95,29 @@ export default function QualificationArchive() {
 
   const handleDeleteJobProof = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
+      const response: any = await axiosInstance.delete(`/jobs/proof/${id}`);
 
-      const response = await axios.delete(`http://localhost:8080/api/jobs/proof/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         toast.success('删除成功');
         fetchArchive();
       }
     } catch (error: any) {
       console.error('删除失败:', error);
-      toast.error(error.response?.data?.message || '删除失败');
+      toast.error(error.message || '删除失败');
     }
   };
 
   const handleDeleteHonor = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
+      const response: any = await axiosInstance.delete(`/academic-honors/${id}`);
 
-      const response = await axios.delete(`http://localhost:8080/api/academic-honors/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         toast.success('删除成功');
         fetchArchive();
       }
     } catch (error: any) {
       console.error('删除失败:', error);
-      toast.error(error.response?.data?.message || '删除失败');
+      toast.error(error.message || '删除失败');
     }
   };
 

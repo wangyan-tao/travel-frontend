@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, DollarSign, Clock, Phone, Briefcase, Upload, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axiosInstance from '@/lib/axios';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,8 +41,6 @@ export default function PartTimeJobRecommendation() {
   const [jobs, setJobs] = useState<PartTimeJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState('');
-  const [district, setDistrict] = useState('');
-  const [jobType, setJobType] = useState('all');
   const [selectedJob, setSelectedJob] = useState<PartTimeJob | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [chatDialogOpen, setChatDialogOpen] = useState(false);
@@ -56,62 +54,57 @@ export default function PartTimeJobRecommendation() {
     file: null as File | null,
   });
 
-  // 只在组件首次挂载时获取用户位置
+  // 组件首次挂载时获取用户位置和兼职列表
   useEffect(() => {
-    fetchUserLocation();
+    const initData = async () => {
+      await fetchUserLocation();
+      // 无论是否有城市信息，都尝试获取兼职列表（后端会根据用户ID自动获取城市）
+      await fetchJobs();
+    };
+    initData();
   }, []);
-
-  // 当筛选条件改变时，重新获取兼职列表
-  useEffect(() => {
-    fetchJobs();
-  }, [city, district, jobType]);
 
   const fetchUserLocation = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      const response: any = await axiosInstance.get('/user/location');
 
-      const response = await axios.get('http://localhost:8080/api/user/location', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data.code === 200 && response.data.data) {
-        const location = response.data.data;
-        // 只在城市为空时才设置默认值，避免覆盖用户手动输入
-        setCity(prevCity => prevCity || (location.currentCity || location.schoolCity || ''));
+      if (response.code === 200 && response.data) {
+        const location = response.data;
+        // 使用用户认证时保存的城市，不允许手动修改
+        const userCity = location.currentCity || location.schoolCity || '';
+        if (userCity) {
+          setCity(userCity);
+        }
+      } else {
+        // 用户尚未设置位置信息，这是正常情况，不显示错误
+        console.log('用户尚未设置位置信息');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取用户位置失败:', error);
+      // 如果用户还没有设置位置信息（404或null），不显示错误提示
+      // 其他错误也不显示，因为不影响获取兼职列表
     }
   };
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
-      const params: any = { status: 'ACTIVE' };
-      if (city) params.city = city;
-      if (district) params.district = district;
-      if (jobType && jobType !== 'all') params.jobType = jobType;
-
-      const response = await axios.get('http://localhost:8080/api/jobs/recommendations', {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
+      const response: any = await axiosInstance.get('/jobs/recommendations', {
+        params: { status: 'ACTIVE' },
       });
 
-      if (response.data.code === 200) {
-        setJobs(response.data.data || []);
+      if (response.code === 200) {
+        setJobs(response.data || []);
       }
     } catch (error: any) {
       console.error('获取兼职推荐失败:', error);
-      if (error.response?.status !== 404) {
-        toast.error('获取兼职推荐失败');
+      const errorMessage = error.message || '获取兼职推荐失败';
+      if (errorMessage.includes('未设置城市信息')) {
+        toast.error('请先完成实名认证并设置所在城市');
+      } else if (error.response?.status !== 404) {
+        toast.error(errorMessage);
       }
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -131,28 +124,21 @@ export default function PartTimeJobRecommendation() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
       // 先上传文件
       const formData = new FormData();
       formData.append('file', uploadForm.file);
 
-      const uploadResponse = await axios.post('http://localhost:8080/api/upload', formData, {
+      const uploadResponse: any = await axiosInstance.post('/upload', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (uploadResponse.data.code !== 200) {
-        throw new Error('文件上传失败');
+      if (uploadResponse.code !== 200) {
+        throw new Error(uploadResponse.message || '文件上传失败');
       }
 
-      const fileUrl = uploadResponse.data.data.url;
+      const fileUrl = uploadResponse.data.url;
       console.log('文件上传成功，URL:', fileUrl);
 
       // 提交工作证明
@@ -167,16 +153,11 @@ export default function PartTimeJobRecommendation() {
 
       console.log('提交工作证明数据:', proofData);
 
-      const response = await axios.post('http://localhost:8080/api/jobs/proof', proofData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
+      const response: any = await axiosInstance.post('/jobs/proof', proofData);
 
-      console.log('工作证明提交响应:', response.data);
+      console.log('工作证明提交响应:', response);
 
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         toast.success('工作证明上传成功！');
         setUploadDialogOpen(false);
         setUploadForm({
@@ -193,7 +174,7 @@ export default function PartTimeJobRecommendation() {
       }
     } catch (error: any) {
       console.error('上传工作证明失败:', error);
-      toast.error(error.response?.data?.message || '上传工作证明失败');
+      toast.error(error.message || '上传工作证明失败');
     }
   };
 
@@ -229,39 +210,15 @@ export default function PartTimeJobRecommendation() {
           <CardDescription>根据您的需求筛选合适的兼职岗位</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>所在城市</Label>
-              <Input
-                placeholder="输入城市名称"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>所在区域</Label>
-              <Input
-                placeholder="输入区域名称"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>岗位类型</Label>
-              <Select value={jobType} onValueChange={setJobType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择岗位类型" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="餐饮服务">餐饮服务</SelectItem>
-                  <SelectItem value="文创店铺">文创店铺</SelectItem>
-                  <SelectItem value="超市导购">超市导购</SelectItem>
-                  <SelectItem value="短期实习">短期实习</SelectItem>
-                  <SelectItem value="其他">其他</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>所在城市</Label>
+            <Input
+              placeholder={city || "未设置城市"}
+              value={city}
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">城市信息来自实名认证，不可修改</p>
           </div>
         </CardContent>
       </Card>

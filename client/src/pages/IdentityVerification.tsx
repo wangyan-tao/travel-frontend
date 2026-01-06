@@ -4,9 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import IDCardOCR from '@/components/IDCardOCR';
 import axios from '@/lib/axios';
+
+// 中国34个省份列表
+const PROVINCES = [
+  '北京市', '天津市', '河北省', '山西省', '内蒙古自治区',
+  '辽宁省', '吉林省', '黑龙江省', '上海市', '江苏省',
+  '浙江省', '安徽省', '福建省', '江西省', '山东省',
+  '河南省', '湖北省', '湖南省', '广东省', '广西壮族自治区',
+  '海南省', '重庆市', '四川省', '贵州省', '云南省',
+  '西藏自治区', '陕西省', '甘肃省', '青海省', '宁夏回族自治区',
+  '新疆维吾尔自治区', '台湾省', '香港特别行政区', '澳门特别行政区'
+];
 
 export default function IdentityVerification() {
   const [, setLocation] = useLocation();
@@ -20,7 +32,8 @@ export default function IdentityVerification() {
     studentCardUrl: '',
     university: '',
     major: '',
-    grade: ''
+    grade: '',
+    city: ''
   });
 
   const handleIDCardDataExtracted = (data: any, side: 'front' | 'back') => {
@@ -60,7 +73,8 @@ export default function IdentityVerification() {
       !formData.studentCardUrl ||
       !formData.university ||
       !formData.major ||
-      !formData.grade
+      !formData.grade ||
+      !formData.city
     ) {
       toast.error('请完整填写必填信息并上传证件照片');
       return;
@@ -78,7 +92,8 @@ export default function IdentityVerification() {
         studentCardUrl: formData.studentCardUrl,
         university: formData.university,
         major: formData.major,
-        grade: formData.grade
+        grade: formData.grade,
+        city: formData.city
       };
       const response: any = await axios.post('/identity/submit', payload);
       if (response.code === 200) {
@@ -192,7 +207,24 @@ export default function IdentityVerification() {
                 />
               </div>
 
-              
+              <div className="space-y-2">
+                <Label htmlFor="city">所在省份 *</Label>
+                <Select
+                  value={formData.city}
+                  onValueChange={(value) => setFormData({ ...formData, city: value })}
+                >
+                  <SelectTrigger id="city">
+                    <SelectValue placeholder="请选择所在省份" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map((province) => (
+                      <SelectItem key={province} value={province}>
+                        {province}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex gap-4">
