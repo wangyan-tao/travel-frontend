@@ -235,6 +235,69 @@ export const adminApi = {
       }
     },
   },
+
+  /**
+   * 放款管理
+   */
+  disbursements: {
+    /**
+     * 获取已批准申请列表（分页）
+     */
+    getApprovedApplications: async (keyword?: string, status?: string, page: number = 1, size: number = 10): Promise<PageResult<LoanApplicationDTO>> => {
+      const params = new URLSearchParams();
+      if (keyword) params.append('keyword', keyword);
+      if (status) params.append('status', status);
+      params.append('page', page.toString());
+      params.append('size', size.toString());
+      const response: any = await axios.get(`/admin/disbursements?${params.toString()}`);
+      if (response.code === 200) {
+        return response.data;
+      }
+      throw new Error(response.message || '获取申请列表失败');
+    },
+    
+    /**
+     * 获取已批准申请ID列表（用于快速切换）
+     */
+    getApprovedApplicationIds: async (): Promise<number[]> => {
+      const response: any = await axios.get(`/admin/disbursements/ids`);
+      if (response.code === 200) {
+        return response.data || [];
+      }
+      throw new Error(response.message || '获取申请ID列表失败');
+    },
+
+    /**
+     * 获取申请详情
+     */
+    getApplicationById: async (id: number): Promise<LoanApplicationDTO> => {
+      const response: any = await axios.get(`/admin/disbursements/${id}`);
+      if (response.code === 200) {
+        return response.data;
+      }
+      throw new Error(response.message || '获取申请详情失败');
+    },
+
+    /**
+     * 同意放款
+     */
+    approveDisbursement: async (id: number): Promise<void> => {
+      const response: any = await axios.post(`/admin/disbursements/${id}/approve`, {});
+      if (response.code !== 200) {
+        throw new Error(response.message || '放款失败');
+      }
+    },
+
+    /**
+     * 驳回放款
+     */
+    rejectDisbursement: async (id: number, data: RejectRequest): Promise<void> => {
+      const response: any = await axios.post(`/admin/disbursements/${id}/reject`, data);
+      if (response.code !== 200) {
+        throw new Error(response.message || '驳回放款失败');
+      }
+    },
+  },
 };
 
 export interface CertificateDTO {
