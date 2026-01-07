@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,6 @@ import {
   XCircle,
   PieChart,
   LineChart,
-  Download,
   Calculator,
   CalendarDays
 } from 'lucide-react';
@@ -47,7 +46,6 @@ export default function RepaymentDetailVisualization() {
   const [prepayAmount, setPrepayAmount] = useState('');
   const [prepayCalculation, setPrepayCalculation] = useState<PrepayCalculation | null>(null);
   const [calculating, setCalculating] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadData();
@@ -103,13 +101,6 @@ export default function RepaymentDetailVisualization() {
     }
   };
 
-  const handleExport = () => {
-    if (!exportRef.current) return;
-
-    // 使用html2canvas或类似库导出截图
-    // 这里简化处理，实际应该使用html2canvas
-    toast.info('导出功能需要安装html2canvas库');
-  };
 
   // 准备饼图数据
   const pieChartData = selectedProduct ? [
@@ -147,7 +138,7 @@ export default function RepaymentDetailVisualization() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">加载还款数据中...</p>
@@ -158,7 +149,7 @@ export default function RepaymentDetailVisualization() {
 
   if (productDetails.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
           <p className="text-muted-foreground mb-4">暂无还款数据</p>
@@ -169,18 +160,11 @@ export default function RepaymentDetailVisualization() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">还款明细可视化</h1>
-            <p className="text-muted-foreground">透明化还款管理，清晰直观，避免逾期</p>
-          </div>
-          <Button onClick={handleExport} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            导出截图
-          </Button>
-        </div>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">还款明细可视化</h2>
+        <p className="text-muted-foreground">透明化还款管理，清晰直观，避免逾期</p>
+      </div>
 
         {/* 产品选择 */}
         <Card className="p-6 mb-6 shadow-lg">
@@ -203,7 +187,7 @@ export default function RepaymentDetailVisualization() {
         </Card>
 
         {selectedProduct && (
-          <div ref={exportRef}>
+          <div>
             {/* 产品还款信息绑定 */}
             <Card className="p-6 mb-6 shadow-lg">
               <h2 className="text-xl font-semibold mb-4">产品还款信息</h2>
@@ -583,7 +567,6 @@ export default function RepaymentDetailVisualization() {
             </Card>
           </div>
         )}
-      </div>
     </div>
   );
 }

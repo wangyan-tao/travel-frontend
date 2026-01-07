@@ -3,11 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, TrendingUp, DollarSign, Loader2, AlertCircle, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, TrendingUp, DollarSign, Loader2, AlertCircle, Clock, CheckCircle2, XCircle, BarChart3 } from 'lucide-react';
 import { repaymentApi, type RepaymentOverview, type RepaymentPlanDTO, type RepaymentRecord } from '@/lib/repaymentApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import RepaymentDetailVisualization from './RepaymentDetailVisualization';
 
 export default function RepaymentManagement() {
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,21 @@ export default function RepaymentManagement() {
           <h1 className="text-3xl font-bold mb-2">还款管理</h1>
           <p className="text-muted-foreground">查看您的还款计划和记录</p>
         </div>
+
+        {/* 标签页切换 */}
+        <Tabs defaultValue="basic" className="mb-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="basic">
+              <Calendar className="h-4 w-4 mr-2" />
+              基础视图
+            </TabsTrigger>
+            <TabsTrigger value="visualization">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              可视化视图
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basic" className="mt-6">
 
         {/* 还款概览 */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -334,6 +351,12 @@ export default function RepaymentManagement() {
             </div>
           )}
         </Card>
+          </TabsContent>
+
+          <TabsContent value="visualization" className="mt-6">
+            <RepaymentDetailVisualization />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
