@@ -12,12 +12,18 @@ interface IdentityGuardProps {
 /**
  * 实名认证守卫组件
  * 如果用户未完成实名认证，则显示提示并引导去实名认证页面
+ * 管理员用户跳过此检查
  */
 export default function IdentityGuard({ children, redirectTo = '/identity-verification' }: IdentityGuardProps) {
   const [, setLocation] = useLocation();
-  const { isVerified, loading } = useIdentityGuard();
+  const { isVerified, isAdmin, loading } = useIdentityGuard();
 
-  // 如果正在加载，显示加载状态
+  // 管理员可以访问所有页面，跳过实名认证检查和加载状态
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  // 如果正在加载，显示加载状态（非管理员用户）
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">

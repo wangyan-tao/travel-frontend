@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, FileText, TrendingUp, AlertCircle, Loader2, Filter, RotateCcw, ArrowRight, Package } from 'lucide-react';
+import { Users, FileText, TrendingUp, AlertCircle, Loader2, Filter, RotateCcw, ArrowRight, Package, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { statisticsApi, type FullStatistics, type StatisticsFilter } from '@/lib/statisticsApi';
 import { MOCK_STATISTICS } from '@/lib/mockStatistics';
@@ -200,6 +200,19 @@ export default function AdminDashboard() {
               <div className="text-left flex-1">
                 <div className="font-semibold text-base mb-1">审批管理</div>
                 <div className="text-sm text-muted-foreground">审批用户上传的工作证明和学业荣誉</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto p-6 flex items-start gap-4 hover:bg-primary/5 hover:border-primary/50 transition-all group"
+              onClick={() => setLocation('/admin/overdue')}
+            >
+              <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="text-left flex-1">
+                <div className="font-semibold text-base mb-1">逾期管理</div>
+                <div className="text-sm text-muted-foreground">贷后风险用户管理与数据分析</div>
               </div>
             </Button>
           </div>
