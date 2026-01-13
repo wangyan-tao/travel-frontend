@@ -8,21 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import IDCardOCR from '@/components/IDCardOCR';
 import axios from '@/lib/axios';
-
-// 中国34个省份列表
-const PROVINCES = [
-  '北京市', '天津市', '河北省', '山西省', '内蒙古自治区',
-  '辽宁省', '吉林省', '黑龙江省', '上海市', '江苏省',
-  '浙江省', '安徽省', '福建省', '江西省', '山东省',
-  '河南省', '湖北省', '湖南省', '广东省', '广西壮族自治区',
-  '海南省', '重庆市', '四川省', '贵州省', '云南省',
-  '西藏自治区', '陕西省', '甘肃省', '青海省', '宁夏回族自治区',
-  '新疆维吾尔自治区', '台湾省', '香港特别行政区', '澳门特别行政区'
-];
+import { getProvinces, getCitiesByProvince } from '@/lib/cityData';
 
 export default function IdentityVerification() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
+  const [province, setProvince] = useState('');
+  const [city, setCity] = useState('');
   const [formData, setFormData] = useState({
     realName: '',
     idCard: '',
@@ -35,6 +27,21 @@ export default function IdentityVerification() {
     grade: '',
     city: ''
   });
+
+  const provinces = getProvinces();
+  const cities = province ? getCitiesByProvince(province) : [];
+
+  const handleProvinceChange = (value: string) => {
+    setProvince(value);
+    setCity(''); // 重置城市选择
+    setFormData({ ...formData, city: '' });
+  };
+
+  const handleCityChange = (value: string) => {
+    setCity(value);
+    // 只存储城市名称，不包含省份
+    setFormData({ ...formData, city: value });
+  };
 
   const handleIDCardDataExtracted = (data: any, side: 'front' | 'back') => {
     if (side === 'front') {
@@ -74,6 +81,8 @@ export default function IdentityVerification() {
       !formData.university ||
       !formData.major ||
       !formData.grade ||
+      !province ||
+      !city ||
       !formData.city
     ) {
       toast.error('请完整填写必填信息并上传证件照片');
@@ -208,18 +217,38 @@ export default function IdentityVerification() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="city">所在省份 *</Label>
+                <Label htmlFor="province">所在省份 *</Label>
                 <Select
-                  value={formData.city}
-                  onValueChange={(value) => setFormData({ ...formData, city: value })}
+                  value={province}
+                  onValueChange={handleProvinceChange}
                 >
-                  <SelectTrigger id="city">
+                  <SelectTrigger id="province">
                     <SelectValue placeholder="请选择所在省份" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROVINCES.map((province) => (
-                      <SelectItem key={province} value={province}>
-                        {province}
+                    {provinces.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">所在城市 *</Label>
+                <Select
+                  value={city}
+                  onValueChange={handleCityChange}
+                  disabled={!province}
+                >
+                  <SelectTrigger id="city">
+                    <SelectValue placeholder={province ? "请选择所在城市" : "请先选择省份"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -26,6 +26,7 @@ import { applicationApi, type LoanApplicationDTO } from '@/lib/applicationApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import IdentityGuard from '@/components/IdentityGuard';
 
 export default function MyApplications() {
   const [, setLocation] = useLocation();
@@ -132,7 +133,8 @@ export default function MyApplications() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <IdentityGuard>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container py-12">
         {/* Header */}
         <div className="mb-8">
@@ -362,5 +364,6 @@ export default function MyApplications() {
         </AlertDialog>
       </div>
     </div>
+    </IdentityGuard>
   );
 }

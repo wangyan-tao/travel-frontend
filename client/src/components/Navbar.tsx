@@ -4,16 +4,32 @@ import UserMenu from './UserMenu';
 import NotificationBell from './NotificationBell';
 import MobileMenu from './MobileMenu';
 import { Plane } from 'lucide-react';
+import { useIdentityGuard } from '@/hooks/useIdentityGuard';
 
 export default function Navbar() {
   const [location] = useLocation();
+  const { interceptNavigation } = useIdentityGuard();
+
+  // 需要实名认证的路径
+  const protectedPaths = ['/loan-products', '/my-applications', '/repayment', '/loan-application', '/profile', '/evaluation', '/repayment-capacity'];
 
   const navItems = [
-    { path: '/', label: '首页' },
-    { path: '/loan-products', label: '贷款产品' },
-    { path: '/my-applications', label: '我的申请' },
-    { path: '/repayment', label: '还款管理' },
+    { path: '/', label: '首页', requireAuth: false },
+    { path: '/loan-products', label: '贷款产品', requireAuth: true },
+    { path: '/my-applications', label: '我的申请', requireAuth: true },
+    { path: '/repayment', label: '还款管理', requireAuth: true },
   ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string, requireAuth: boolean) => {
+    // 如果路径需要实名认证，进行拦截检查
+    if (requireAuth) {
+      const isProtected = protectedPaths.some(p => path.startsWith(p));
+      if (isProtected && !interceptNavigation(path)) {
+        e.preventDefault();
+        return false;
+      }
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -34,6 +50,7 @@ export default function Navbar() {
             <Link
               key={item.path}
               href={item.path}
+              onClick={(e) => handleNavClick(e, item.path, item.requireAuth)}
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 location === item.path
                   ? 'text-primary'

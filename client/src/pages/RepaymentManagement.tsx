@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import RepaymentDetailVisualization from './RepaymentDetailVisualization';
+import IdentityGuard from '@/components/IdentityGuard';
 
 export default function RepaymentManagement() {
   const [loading, setLoading] = useState(true);
@@ -94,7 +95,8 @@ export default function RepaymentManagement() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <IdentityGuard>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">还款管理</h1>
@@ -359,5 +361,6 @@ export default function RepaymentManagement() {
         </Tabs>
       </div>
     </div>
+    </IdentityGuard>
   );
 }

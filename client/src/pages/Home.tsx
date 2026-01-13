@@ -1,9 +1,18 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Shield, TrendingUp, Clock, Award } from 'lucide-react';
+import { useIdentityGuard } from '@/hooks/useIdentityGuard';
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const { interceptNavigation } = useIdentityGuard();
+
+  const handleProtectedLinkClick = (e: React.MouseEvent, path: string) => {
+    if (!interceptNavigation(path)) {
+      e.preventDefault();
+    }
+  };
   const features = [
     {
       icon: Shield,
@@ -48,7 +57,7 @@ export default function Home() {
                   立即注册
                 </Button>
               </Link>
-              <Link href="/loan-products">
+              <Link href="/loan-products" onClick={(e) => handleProtectedLinkClick(e, '/loan-products')}>
                 <Button size="lg" variant="outline" className="text-lg px-8">
                   浏览产品
                 </Button>

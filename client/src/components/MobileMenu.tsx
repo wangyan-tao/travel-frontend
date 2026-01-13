@@ -9,16 +9,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useIdentityGuard } from '@/hooks/useIdentityGuard';
 
 interface MobileMenuProps {
-  navItems: Array<{ path: string; label: string }>;
+  navItems: Array<{ path: string; label: string; requireAuth?: boolean }>;
 }
 
 export default function MobileMenu({ navItems }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
+  const { interceptNavigation } = useIdentityGuard();
 
-  const handleNavClick = (path: string) => {
+  const handleNavClick = (e: React.MouseEvent, path: string, requireAuth?: boolean) => {
+    // 如果路径需要实名认证，进行拦截检查
+    if (requireAuth && !interceptNavigation(path)) {
+      e.preventDefault();
+      return;
+    }
     setOpen(false);
   };
 
@@ -37,7 +44,7 @@ export default function MobileMenu({ navItems }: MobileMenuProps) {
           {navItems.map((item) => (
             <Link key={item.path} href={item.path}>
               <a
-                onClick={() => handleNavClick(item.path)}
+                onClick={(e) => handleNavClick(e, item.path, item.requireAuth)}
                 className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                   location === item.path
                     ? 'bg-primary text-primary-foreground'

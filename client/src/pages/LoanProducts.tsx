@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import axios from '@/lib/axios';
 import { profileApi } from '@/lib/profileApi';
+import IdentityGuard from '@/components/IdentityGuard';
 
 interface LoanProduct {
   id: number;
@@ -99,7 +100,8 @@ export default function LoanProducts() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <IdentityGuard>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* 导航栏 */}
       <nav className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
@@ -251,5 +253,6 @@ export default function LoanProducts() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </IdentityGuard>
   );
 }
