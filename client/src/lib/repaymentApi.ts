@@ -156,5 +156,20 @@ export const repaymentApi = {
     }
     throw new Error(response.message || '提前还款测算失败');
   },
+
+  /**
+   * 执行还款
+   * @param planId 还款计划ID
+   * @param paymentMethod 支付方式：ALIPAY-支付宝, WECHAT-微信
+   */
+  executeRepayment: async (planId: number, paymentMethod: 'ALIPAY' | 'WECHAT'): Promise<RepaymentRecord> => {
+    const response: any = await axios.post('/repayment/pay', null, {
+      params: { planId, paymentMethod },
+    });
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '还款失败');
+  },
 };
 

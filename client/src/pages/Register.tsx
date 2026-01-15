@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import axios from '@/lib/axios';
+import { profileApi } from '@/lib/profileApi';
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -51,6 +52,10 @@ export default function Register() {
       if (response.code === 200) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        // 清除 profile 缓存，确保获取最新数据
+        profileApi.clearCache();
+        // 设置标记，表示刚刚注册/登录成功，避免组件初始化时重复调用
+        sessionStorage.setItem('just-logged-in', 'true');
         window.dispatchEvent(new Event('auth-changed'));
         
         toast.success('注册成功');

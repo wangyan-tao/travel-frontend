@@ -3,22 +3,39 @@ import { useLocation } from 'wouter';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { profileApi, type ProfileData, type LoanApplication } from '@/lib/profileApi';
+import { applicationApi, type LoanApplicationDTO } from '@/lib/applicationApi';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import EditLocationDialog from '@/components/EditLocationDialog';
+import { Pencil } from 'lucide-react';
 
 export default function Profile() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ProfileData | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<LoanApplicationDTO | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editLocationDialogOpen, setEditLocationDialogOpen] = useState(false);
 
   useEffect(() => {
-    load();
+    // Profile 页面首次加载时强制刷新，确保获取最新数据
+    load(true);
   }, []);
 
-  const load = async () => {
+  const load = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const res = await profileApi.getMe();
+      // Profile 页面需要最新数据，强制刷新
+      const res = await profileApi.getMe(forceRefresh);
       setData(res);
       if (!res.identityVerified) {
         toast.warning('未完成实名信息，请尽快提交');
@@ -66,6 +83,29 @@ export default function Profile() {
 
   const loans = (data.loans ?? []).slice(0, 5);
 
+  const handleViewDetail = async (id: number) => {
+    try {
+      const detail = await applicationApi.getApplicationById(id);
+      setSelectedApplication(detail);
+      setDetailDialogOpen(true);
+    } catch (error: any) {
+      toast.error(error.message || '获取申请详情失败');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+      PENDING: { label: '待审核', variant: 'secondary' },
+      APPROVED: { label: '已批准', variant: 'default' },
+      REJECTED: { label: '已拒绝', variant: 'destructive' },
+      DISBURSED: { label: '已发放', variant: 'default' },
+      COMPLETED: { label: '已完成', variant: 'outline' },
+      CANCELLED: { label: '已取消', variant: 'outline' },
+    };
+    const config = statusMap[status] || { label: status, variant: 'outline' };
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8 space-y-8">
@@ -101,6 +141,43 @@ export default function Profile() {
                 <span className="text-muted-foreground">状态</span>
                 {renderStatus(data.user?.status === 'ACTIVE', '正常', '禁用')}
               </div>
+              {/* 位置信息 - 仅普通用户显示 */}
+              {data.user?.role !== 'ADMIN' && (
+                <>
+                  <div className="pt-2 border-t">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-muted-foreground">位置信息</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditLocationDialogOpen(true)}
+                        className="h-6 px-2"
+                      >
+                        <Pencil className="h-3 w-3 mr-1" />
+                        编辑
+                      </Button>
+                    </div>
+                    {data.location?.currentProvince || data.location?.currentCity ? (
+                      <div className="space-y-1">
+                        {data.location.currentProvince && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">所在省份</span>
+                            <span>{data.location.currentProvince}</span>
+                          </div>
+                        )}
+                        {data.location.currentCity && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">所在城市</span>
+                            <span>{data.location.currentCity}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">未设置位置信息</p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </Card>
 
@@ -271,7 +348,7 @@ export default function Profile() {
                     )}
                   </div>
                   <div className="flex items-center justify-end">
-                    <Button variant="outline" size="sm" onClick={() => setLocation(`/loan-application/${loan.id}`)}>
+                    <Button variant="outline" size="sm" onClick={() => handleViewDetail(loan.id)}>
                       查看详情
                     </Button>
                   </div>
@@ -282,6 +359,91 @@ export default function Profile() {
             <div className="text-sm text-muted-foreground">暂无贷款记录</div>
           )}
         </Card>
+
+        {/* 详情对话框 */}
+        <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>申请详情</DialogTitle>
+              <DialogDescription>查看完整的申请信息</DialogDescription>
+            </DialogHeader>
+            {selectedApplication && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">产品名称</p>
+                    <p className="font-semibold">{selectedApplication.productName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">申请状态</p>
+                    <div className="mt-1">{getStatusBadge(selectedApplication.application.status)}</div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">申请金额</p>
+                    <p className="font-semibold">¥{Number(selectedApplication.application.applyAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">申请期限</p>
+                    <p className="font-semibold">{selectedApplication.application.applyTerm}个月</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">贷款用途</p>
+                    <p className="font-semibold">{selectedApplication.application.purpose || '未填写'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">申请时间</p>
+                    <p className="font-semibold">
+                      {selectedApplication.application.applyTime 
+                        ? format(new Date(selectedApplication.application.applyTime), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })
+                        : '-'}
+                    </p>
+                  </div>
+                  {selectedApplication.application.approveTime && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">审批时间</p>
+                      <p className="font-semibold">
+                        {format(new Date(selectedApplication.application.approveTime), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                      </p>
+                    </div>
+                  )}
+                  {selectedApplication.application.loanAmount && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">放款金额</p>
+                      <p className="font-semibold">¥{Number(selectedApplication.application.loanAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  )}
+                  {selectedApplication.application.loanTime && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">放款时间</p>
+                      <p className="font-semibold">
+                        {format(new Date(selectedApplication.application.loanTime), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                      </p>
+                    </div>
+                  )}
+                  {selectedApplication.application.rejectReason && (
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">拒绝原因</p>
+                      <p className="font-semibold text-destructive">{selectedApplication.application.rejectReason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* 编辑位置信息对话框 */}
+        {data.user?.role !== 'ADMIN' && (
+          <EditLocationDialog
+            open={editLocationDialogOpen}
+            onOpenChange={setEditLocationDialogOpen}
+            location={data.location}
+            onSuccess={() => {
+              // 重新加载数据
+              load(true);
+            }}
+          />
+        )}
       </div>
     </div>
   );

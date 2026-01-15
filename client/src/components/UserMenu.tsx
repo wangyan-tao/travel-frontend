@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, User, Settings, FileText, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from '@/lib/axios';
+import { profileApi } from '@/lib/profileApi';
 
 interface UserInfo {
   id: number;
@@ -27,12 +28,25 @@ export default function UserMenu() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserInfo();
     const handleAuthChange = () => {
       setLoading(true);
       fetchUserInfo();
+      // 清除标记，表示已经处理过登录事件
+      sessionStorage.removeItem('just-logged-in');
     };
+    
     window.addEventListener('auth-changed', handleAuthChange);
+    
+    // 检查是否有 token 和是否刚刚登录
+    const token = localStorage.getItem('token');
+    const justLoggedIn = sessionStorage.getItem('just-logged-in');
+    
+    if (token && !justLoggedIn) {
+      // 如果有 token 但不是刚刚登录（页面刷新），立即获取用户信息
+      fetchUserInfo();
+    }
+    // 如果是刚刚登录，等待 auth-changed 事件处理，不立即调用
+    
     return () => {
       window.removeEventListener('auth-changed', handleAuthChange);
     };
@@ -79,6 +93,8 @@ export default function UserMenu() {
       // 无论接口调用是否成功，都清除本地数据
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      // 清除 profile 缓存
+      profileApi.clearCache();
       toast.success('退出登录成功');
       window.dispatchEvent(new Event('auth-changed'));
       setLocation('/login');

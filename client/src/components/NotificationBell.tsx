@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,15 +26,9 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    fetchNotifications();
-    // 每1分钟自动刷新通知
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -49,6 +43,64 @@ export default function NotificationBell() {
     } catch (error) {
       // 静默失败，不显示错误提示（后端未启动时）
       console.log('通知服务不可用');
+    }
+  }, []);
+
+  useEffect(() => {
+    // 监听登录成功事件
+    const handleAuthChanged = () => {
+      const newToken = localStorage.getItem('token');
+      if (newToken) {
+        fetchNotifications();
+        // 清除标记，表示已经处理过登录事件
+        sessionStorage.removeItem('just-logged-in');
+      }
+    };
+
+    // 监听自定义刷新事件
+    const handleRefreshNotifications = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener('auth-changed', handleAuthChanged);
+    window.addEventListener('refresh-notifications', handleRefreshNotifications);
+
+    // 检查是否有 token
+    const token = localStorage.getItem('token');
+    const justLoggedIn = sessionStorage.getItem('just-logged-in');
+    
+    if (token && !justLoggedIn) {
+      // 如果有 token 但不是刚刚登录（页面刷新），立即获取通知
+      fetchNotifications();
+    }
+    // 如果是刚刚登录，等待 auth-changed 事件处理，不立即调用
+
+    // 每1分钟自动刷新通知
+    intervalRef.current = setInterval(() => {
+      const currentToken = localStorage.getItem('token');
+      if (currentToken) {
+        fetchNotifications();
+      }
+    }, 60000);
+
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChanged);
+      window.removeEventListener('refresh-notifications', handleRefreshNotifications);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [fetchNotifications]);
+
+  // 处理打开通知面板时刷新通知
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    // 当打开通知面板时刷新通知
+    if (newOpen) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetchNotifications();
+      }
     }
   };
 
@@ -129,7 +181,7 @@ export default function NotificationBell() {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />

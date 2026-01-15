@@ -16,12 +16,61 @@ export function useIdentityGuard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkIdentity();
+    // 监听登录成功事件
+    const handleAuthChanged = () => {
+      // 延迟执行，让其他组件先处理
+      setTimeout(() => {
+        // 检查 token，如果没有 token（退出登录），直接设置状态，不调用 API
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsVerified(false);
+          setIsAdmin(false);
+          setLoading(false);
+          // 清除 profile 缓存
+          profileApi.clearCache();
+          return;
+        }
+        checkIdentity();
+      }, 200);
+      // 清除标记，表示已经处理过登录事件
+      sessionStorage.removeItem('just-logged-in');
+    };
+
+    window.addEventListener('auth-changed', handleAuthChanged);
+
+    // 检查是否有 token 和是否刚刚登录
+    const token = localStorage.getItem('token');
+    const justLoggedIn = sessionStorage.getItem('just-logged-in');
+    
+    if (token && !justLoggedIn) {
+      // 如果有 token 但不是刚刚登录（页面刷新），立即检查
+      checkIdentity();
+    } else if (!token) {
+      // 如果没有 token，直接设置状态，不调用 API
+      setIsVerified(false);
+      setIsAdmin(false);
+      setLoading(false);
+    }
+    // 如果是刚刚登录，等待 auth-changed 事件处理，不立即调用
+    
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChanged);
+    };
   }, []);
 
   const checkIdentity = async () => {
     try {
       setLoading(true);
+      
+      // 首先检查 token，如果没有 token（退出登录），直接返回
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsVerified(false);
+        setIsAdmin(false);
+        setLoading(false);
+        profileApi.clearCache();
+        return;
+      }
       
       // 先快速检查localStorage中的用户角色（避免不必要的API调用）
       try {
@@ -42,7 +91,6 @@ export function useIdentityGuard() {
       
       // 如果localStorage中没有，尝试从auth/me接口快速获取角色
       try {
-        const token = localStorage.getItem('token');
         if (token) {
           const authResponse: any = await axios.get('/auth/me');
           if (authResponse.code === 200 && authResponse.data?.role === 'ADMIN') {
@@ -57,6 +105,7 @@ export function useIdentityGuard() {
         // 如果快速检查失败，继续使用profileApi
       }
       
+      // 使用缓存机制，避免短时间内重复调用
       const profile = await profileApi.getMe();
       setIsVerified(profile.identityVerified);
       // 检查是否为管理员
