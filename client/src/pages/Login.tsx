@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import axios from '@/lib/axios';
 import { sm4 } from 'sm-crypto';
+import { profileApi } from '@/lib/profileApi';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -43,6 +44,10 @@ export default function Login() {
       if (response.code === 200) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        // 清除 profile 缓存，确保获取最新数据
+        profileApi.clearCache();
+        // 设置标记，表示刚刚登录成功，避免组件初始化时重复调用
+        sessionStorage.setItem('just-logged-in', 'true');
         window.dispatchEvent(new Event('auth-changed'));
         
         toast.success('登录成功');

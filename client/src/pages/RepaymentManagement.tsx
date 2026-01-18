@@ -4,19 +4,22 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, TrendingUp, DollarSign, Loader2, AlertCircle, Clock, CheckCircle2, XCircle, BarChart3 } from 'lucide-react';
+import { Calendar, TrendingUp, DollarSign, Loader2, AlertCircle, Clock, CheckCircle2, XCircle, BarChart3, CreditCard } from 'lucide-react';
 import { repaymentApi, type RepaymentOverview, type RepaymentPlanDTO, type RepaymentRecord } from '@/lib/repaymentApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import RepaymentDetailVisualization from './RepaymentDetailVisualization';
 import IdentityGuard from '@/components/IdentityGuard';
+import RepaymentDialog from '@/components/RepaymentDialog';
 
 export default function RepaymentManagement() {
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<RepaymentOverview | null>(null);
   const [plans, setPlans] = useState<RepaymentPlanDTO[]>([]);
   const [records, setRecords] = useState<RepaymentRecord[]>([]);
+  const [repaymentDialogOpen, setRepaymentDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ planId: number; amount: number; periodNumber: number } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -165,22 +168,51 @@ export default function RepaymentManagement() {
               <Progress value={progress} className="h-3" />
             </div>
             
-            {overview.nextPaymentDate && (
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">下次还款日期</div>
-                  <div className="text-lg font-semibold">
-                    {format(new Date(overview.nextPaymentDate), 'yyyy年MM月dd日', { locale: zhCN })}
+            {overview.nextPaymentDate && (() => {
+              // 找到下一个待还款的计划
+              const nextPlan = plans
+                .map(dto => dto.plan)
+                .find(plan => {
+                  const planDate = new Date(plan.dueDate).toISOString().split('T')[0];
+                  const nextDate = new Date(overview.nextPaymentDate!).toISOString().split('T')[0];
+                  return planDate === nextDate && (plan.status === 'PENDING' || plan.status === 'OVERDUE');
+                });
+
+              return (
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">下次还款日期</div>
+                    <div className="text-lg font-semibold">
+                      {format(new Date(overview.nextPaymentDate), 'yyyy年MM月dd日', { locale: zhCN })}
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-2">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">应还金额</div>
+                      <div className="text-lg font-semibold text-primary">
+                        ¥{Number(overview.nextPaymentAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    {nextPlan && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPlan({
+                            planId: nextPlan.id,
+                            amount: Number(nextPlan.totalAmount),
+                            periodNumber: nextPlan.periodNumber,
+                          });
+                          setRepaymentDialogOpen(true);
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4 mr-1" />
+                        立即还款
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-muted-foreground mb-1">应还金额</div>
-                  <div className="text-lg font-semibold text-primary">
-                    ¥{Number(overview.nextPaymentAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </Card>
 
@@ -249,11 +281,30 @@ export default function RepaymentManagement() {
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-semibold mb-2">
+                            <div className="text-right flex flex-col items-end gap-2">
+                              <div className="font-semibold">
                                 ¥{Number(plan.totalAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
-                              {getStatusBadge(plan.status)}
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(plan.status)}
+                                {(plan.status === 'PENDING' || plan.status === 'OVERDUE') && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPlan({
+                                        planId: plan.id,
+                                        amount: Number(plan.totalAmount),
+                                        periodNumber: plan.periodNumber,
+                                      });
+                                      setRepaymentDialogOpen(true);
+                                    }}
+                                    className="h-7"
+                                  >
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                    还款
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -360,6 +411,21 @@ export default function RepaymentManagement() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* 还款对话框 */}
+      {selectedPlan && (
+        <RepaymentDialog
+          open={repaymentDialogOpen}
+          onOpenChange={setRepaymentDialogOpen}
+          planId={selectedPlan.planId}
+          amount={selectedPlan.amount}
+          periodNumber={selectedPlan.periodNumber}
+          onSuccess={() => {
+            // 还款成功后重新加载数据
+            loadData();
+          }}
+        />
+      )}
     </div>
     </IdentityGuard>
   );

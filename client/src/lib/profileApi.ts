@@ -62,11 +62,24 @@ export interface LoanApplication {
   updatedAt?: string;
 }
 
+export interface UserLocation {
+  id: number;
+  userId: number;
+  currentProvince?: string;
+  currentCity?: string;
+  schoolCity?: string;
+  latitude?: number;
+  longitude?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProfileData {
   user: User | null;
   identity: UserIdentity | null;
   guarantor: Guarantor | null;
   loans: LoanApplication[];
+  location?: UserLocation | null;
   identityVerified: boolean;
   guarantorCompleted: boolean;
 }
@@ -97,14 +110,40 @@ export interface EvaluationRequest {
   answers?: Record<string, any>;
 }
 
+// 缓存机制：避免短时间内重复调用
+let profileCache: {
+  data: ProfileData | null;
+  timestamp: number;
+} | null = null;
+
+const CACHE_DURATION = 5000; // 缓存5秒
+
 export const profileApi = {
-  getMe: async (): Promise<ProfileData> => {
+  getMe: async (forceRefresh = false): Promise<ProfileData> => {
+    // 检查缓存
+    if (!forceRefresh && profileCache) {
+      const now = Date.now();
+      if (now - profileCache.timestamp < CACHE_DURATION) {
+        return profileCache.data!;
+      }
+    }
+
     const res: any = await axios.get('/profile/me');
     // axios 拦截器已经返回了 response.data，所以 res 就是 Result 对象
     if (res.code === 200 && res.data) {
+      // 更新缓存
+      profileCache = {
+        data: res.data,
+        timestamp: Date.now(),
+      };
       return res.data;
     }
     throw new Error(res.message || '获取个人信息失败');
+  },
+  
+  // 清除缓存
+  clearCache: () => {
+    profileCache = null;
   },
   
   checkEvaluation: async (): Promise<boolean> => {
@@ -120,5 +159,18 @@ export const profileApi = {
   submitEvaluation: async (data: EvaluationRequest): Promise<EvaluationQuestionnaire> => {
     const res: any = await axios.post('/evaluation/submit', data);
     return res.data;
+  },
+
+  /**
+   * 更新用户位置信息
+   */
+  updateLocation: async (province?: string, city?: string): Promise<UserLocation> => {
+    const res: any = await axios.put('/user/location', null, {
+      params: { province, city },
+    });
+    if (res.code === 200) {
+      return res.data;
+    }
+    throw new Error(res.message || '更新位置信息失败');
   },
 };
