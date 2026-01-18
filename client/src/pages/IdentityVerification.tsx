@@ -107,6 +107,8 @@ export default function IdentityVerification() {
       const response: any = await axios.post('/identity/submit', payload);
       if (response.code === 200) {
         toast.success('实名信息提交成功');
+        // 触发全局事件，通知所有使用 useIdentityGuard 的组件更新认证状态
+        window.dispatchEvent(new Event('identity-verified'));
         setLocation('/guarantor-info');
       } else {
         toast.error(response.message || '提交失败，请稍后重试');

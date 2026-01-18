@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { profileApi } from '@/lib/profileApi';
@@ -8,15 +8,12 @@ import { profileApi } from '@/lib/profileApi';
  * 检查用户是否已完成实名认证，如果未认证则拦截导航并提示
  */
 export function useIdentityGuard() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const prevLocationRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    checkIdentity();
-  }, []);
-
-  const checkIdentity = async () => {
+  const checkIdentity = useCallback(async () => {
     try {
       setLoading(true);
       const profile = await profileApi.getMe();
@@ -27,7 +24,37 @@ export function useIdentityGuard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // 初始检查
+    checkIdentity();
+  }, [checkIdentity]);
+
+  useEffect(() => {
+    // 监听路由变化，当从实名认证页面离开时重新检查
+    // 这样可以确保完成认证后立即更新状态
+    const prevLocation = prevLocationRef.current;
+    prevLocationRef.current = location;
+    
+    // 只在从实名认证页面离开时检查，避免不必要的请求
+    if (prevLocation === '/identity-verification' && location !== '/identity-verification') {
+      checkIdentity();
+    }
+  }, [location, checkIdentity]);
+
+  useEffect(() => {
+    // 监听全局事件，当完成实名认证时刷新状态
+    const handleIdentityVerified = () => {
+      checkIdentity();
+    };
+
+    window.addEventListener('identity-verified', handleIdentityVerified);
+    
+    return () => {
+      window.removeEventListener('identity-verified', handleIdentityVerified);
+    };
+  }, [checkIdentity]);
 
   /**
    * 检查是否可以访问受保护的页面
