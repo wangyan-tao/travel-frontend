@@ -42,6 +42,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { overdueApi, type OverdueUser, type OverdueStatistics } from '@/lib/overdueApi';
+import OverdueUserListDialog from '@/components/OverdueUserListDialog';
 
 const COLORS = {
   low: '#10b981',      // 绿色 - 低风险
@@ -70,6 +71,7 @@ export default function OverdueManagement() {
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationContent, setNotificationContent] = useState('');
   const [sending, setSending] = useState(false);
+  const [userListDialogOpen, setUserListDialogOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -166,7 +168,10 @@ export default function OverdueManagement() {
         {/* 统计卡片 */}
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <Card className="p-6">
+            <Card 
+              className="p-6 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setUserListDialogOpen(true)}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">风险用户总数</p>
@@ -472,6 +477,12 @@ export default function OverdueManagement() {
             </Table>
           </div>
         </Card>
+
+        {/* 逾期用户列表对话框 */}
+        <OverdueUserListDialog 
+          open={userListDialogOpen} 
+          onOpenChange={setUserListDialogOpen} 
+        />
 
         {/* 发送通知对话框 */}
         <Dialog open={notificationDialogOpen} onOpenChange={setNotificationDialogOpen}>
