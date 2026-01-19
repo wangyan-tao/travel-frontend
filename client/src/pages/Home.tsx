@@ -22,7 +22,7 @@ export default function Home() {
     {
       icon: TrendingUp,
       title: '低息优惠',
-      description: '专为大学生设计的低息贷款产品，减轻还款压力'
+      description: '专为职场新秀设计的低息贷款产品，减轻还款压力'
     },
     {
       icon: Clock,
@@ -46,10 +46,10 @@ export default function Home() {
               青春旅贷
             </h1>
             <p className="text-2xl text-muted-foreground">
-              大学生专属旅游贷款平台
+              职场新秀专属旅游贷款平台
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              低门槛、强适配、全透明的旅游贷款服务，助力大学生安全、理性实现出行梦想
+              低门槛、强适配、全透明的旅游贷款服务，助力职场新秀安全、理性实现出行梦想
             </p>
             <div className="flex gap-4 justify-center pt-4">
               <Link href="/register">
@@ -72,7 +72,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">核心优势</h2>
-            <p className="text-muted-foreground">专为大学生打造的贷款服务</p>
+            <p className="text-muted-foreground">专为职场新秀打造的贷款服务</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -125,7 +125,7 @@ export default function Home() {
           <Card className="p-12 text-center bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
             <h2 className="text-3xl font-bold mb-4">开启你的旅行之旅</h2>
             <p className="text-lg mb-8 opacity-90">
-              立即注册，享受大学生专属优惠
+              立即注册，享受职场新秀专属优惠
             </p>
             <Link href="/register">
               <Button size="lg" variant="secondary" className="text-lg px-8">
@@ -141,7 +141,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center text-muted-foreground">
             <p>© 2024 青春旅贷. All rights reserved.</p>
-            <p className="mt-2 text-sm">专注大学生旅游贷款服务</p>
+            <p className="mt-2 text-sm">专注职场新秀旅游贷款服务</p>
           </div>
         </div>
       </footer>

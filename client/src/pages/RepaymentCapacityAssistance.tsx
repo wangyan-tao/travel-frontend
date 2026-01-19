@@ -32,8 +32,8 @@ export default function RepaymentCapacityAssistance() {
           <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50">
             <CardContent className="pt-6">
               <p className="text-base leading-relaxed text-gray-700">
-                本板块核心为大学生提供贷款资质加分项，通过两类路径助力提升贷款审批通过率、拉高授信额度，
-                适配不同需求的大学生，双向并行覆盖无兼职/有兼职、重学业/重实践等各类群体。
+                本板块核心为职场新秀提供贷款资质加分项，通过两类路径助力提升贷款审批通过率、拉高授信额度，
+                适配不同需求的职场新秀，双向并行覆盖无兼职/有兼职、重学业/重实践等各类群体。
               </p>
             </CardContent>
           </Card>
@@ -74,7 +74,7 @@ export default function RepaymentCapacityAssistance() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                专为无时间兼职但学业优秀的大学生提供，上传学业成绩和荣誉证书，帮助降低利率、提高授信额度
+                专为无时间兼职但学业优秀的职场新秀提供，上传学业成绩和荣誉证书，帮助降低利率、提高授信额度
               </p>
             </CardContent>
           </Card>

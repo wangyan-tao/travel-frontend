@@ -188,7 +188,7 @@ export default function AcademicHonorUpload() {
                 上传学业荣誉证明
               </CardTitle>
               <CardDescription className="mt-2">
-                专为无时间兼职但学业优秀的大学生提供，上传学业成绩和荣誉证书，帮助降低利率、提高授信额度
+                专为无时间兼职但学业优秀的职场新秀提供，上传学业成绩和荣誉证书，帮助降低利率、提高授信额度
               </CardDescription>
             </div>
             <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
@@ -248,7 +248,7 @@ export default function AcademicHonorUpload() {
                   <div className="space-y-2">
                     <Label>荣誉名称 *</Label>
                     <Input
-                      placeholder="例如：国家励志奖学金、全国大学生数学建模竞赛一等奖"
+                      placeholder="例如：国家励志奖学金、全国职场新秀数学建模竞赛一等奖"
                       value={uploadForm.honorName}
                       onChange={(e) => setUploadForm({ ...uploadForm, honorName: e.target.value })}
                     />

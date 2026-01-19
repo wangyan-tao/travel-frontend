@@ -39,7 +39,7 @@ export default function JobChatDialog({ open, onOpenChange, job }: JobChatDialog
     },
     {
       id: '2',
-      content: `您好！感谢您对我们${job.companyName}的关注。这个岗位主要负责${job.jobTitle}相关工作，工作时间灵活，适合在校大学生。请问您什么时候方便来面试呢？`,
+      content: `您好！感谢您对我们${job.companyName}的关注。这个岗位主要负责${job.jobTitle}相关工作，工作时间灵活，适合职场新秀。请问您什么时候方便来面试呢？`,
       sender: 'recruiter',
       timestamp: new Date(Date.now() + 1000),
     },

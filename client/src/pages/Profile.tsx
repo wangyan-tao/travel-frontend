@@ -197,16 +197,8 @@ export default function Profile() {
                   <span>{data.identity.idCard}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">学号</span>
-                  <span>{data.identity.studentId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">学校</span>
+                  <span className="text-muted-foreground">毕业院校</span>
                   <span>{data.identity.university}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">专业</span>
-                  <span>{data.identity.major}</span>
                 </div>
                 <div className="flex gap-2 pt-2">
                   {data.identity.idCardFrontUrl && (
@@ -224,16 +216,6 @@ export default function Profile() {
                       <img
                         src={normalizeUrl(data.identity.idCardBackUrl)}
                         alt="身份证反面"
-                        className="h-20 w-28 object-cover rounded border"
-                        onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
-                      />
-                    </a>
-                  )}
-                  {data.identity.studentCardUrl && (
-                    <a href={normalizeUrl(data.identity.studentCardUrl)} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={normalizeUrl(data.identity.studentCardUrl)}
-                        alt="学生证"
                         className="h-20 w-28 object-cover rounded border"
                         onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
                       />

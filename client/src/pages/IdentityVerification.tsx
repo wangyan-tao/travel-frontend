@@ -20,11 +20,7 @@ export default function IdentityVerification() {
     idCard: '',
     idCardFrontUrl: '',
     idCardBackUrl: '',
-    studentId: '',
-    studentCardUrl: '',
     university: '',
-    major: '',
-    grade: '',
     city: ''
   });
 
@@ -59,14 +55,6 @@ export default function IdentityVerification() {
     }
   };
 
-  const handleStudentCardExtracted = (data: any) => {
-    if (data?.imageUrl) {
-      setFormData(prev => ({
-        ...prev,
-        studentCardUrl: data.imageUrl
-      }));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,11 +64,7 @@ export default function IdentityVerification() {
       !formData.idCard ||
       !formData.idCardFrontUrl ||
       !formData.idCardBackUrl ||
-      !formData.studentId ||
-      !formData.studentCardUrl ||
       !formData.university ||
-      !formData.major ||
-      !formData.grade ||
       !province ||
       !city ||
       !formData.city
@@ -97,11 +81,7 @@ export default function IdentityVerification() {
         idCard: formData.idCard,
         idCardFrontUrl: formData.idCardFrontUrl,
         idCardBackUrl: formData.idCardBackUrl,
-        studentId: formData.studentId,
-        studentCardUrl: formData.studentCardUrl,
         university: formData.university,
-        major: formData.major,
-        grade: formData.grade,
         city: formData.city
       };
       const response: any = await axios.post('/identity/submit', payload);
@@ -126,7 +106,7 @@ export default function IdentityVerification() {
         <Card className="p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-bold mb-2">实名认证</h1>
-            <p className="text-muted-foreground">请上传身份证和学生证完成实名认证</p>
+            <p className="text-muted-foreground">请上传身份证完成实名认证</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -141,17 +121,6 @@ export default function IdentityVerification() {
                 <IDCardOCR 
                   side="back" 
                   onDataExtracted={(data) => handleIDCardDataExtracted(data, 'back')} 
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">学生证信息</h3>
-              <div className="grid md:grid-cols-1 gap-4">
-                <IDCardOCR
-                  side="front"
-                  title="上传学生证"
-                  onDataExtracted={handleStudentCardExtracted}
                 />
               </div>
             </div>
@@ -179,42 +148,12 @@ export default function IdentityVerification() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="studentId">学号 *</Label>
-                <Input
-                  id="studentId"
-                  value={formData.studentId}
-                  onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  placeholder="请输入学号"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="university">所在大学 *</Label>
+                <Label htmlFor="university">毕业院校 *</Label>
                 <Input
                   id="university"
                   value={formData.university}
                   onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                  placeholder="请输入大学名称"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="major">专业 *</Label>
-                <Input
-                  id="major"
-                  value={formData.major}
-                  onChange={(e) => setFormData({ ...formData, major: e.target.value })}
-                  placeholder="请输入专业"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="grade">年级 *</Label>
-                <Input
-                  id="grade"
-                  value={formData.grade}
-                  onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                  placeholder="请输入年级，如 大一/大二"
+                  placeholder="请输入毕业院校名称"
                 />
               </div>
 
